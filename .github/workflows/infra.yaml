@@ -38,6 +38,11 @@ jobs:
           cd NetflixInfra/k8s/NetflixFrontend
           sed -i "s|image: .*|image: ${NETFLIX_FRONTEND_IMAGE_NAME}|" frontend.yaml
 
+      - name: Configure Git
+        run: |
+          git config --global user.email "yaelwilamo@gmail.com"
+          git config --global user.name "YaelWilamowski"
+
       - name: Commit and Push changes
         run: |
           cd NetflixInfra
