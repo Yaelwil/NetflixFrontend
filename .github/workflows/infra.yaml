@@ -30,6 +30,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: Yaelwil/NetflixInfra
+          token: ${{ secrets.REPO_TOKEN }}  # The GITHUB_TOKEN secret is a GitHub access token.
           path: NetflixInfra
 
       - name: Update YAML manifests
