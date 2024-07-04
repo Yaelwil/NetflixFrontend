@@ -7,3 +7,4 @@ module.exports = {
     jsxSingleQuote: true,
     arrowParens: 'avoid'
 };
+

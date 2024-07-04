@@ -26,6 +26,11 @@ jobs:
           docker build -t $NETFLIX_FRONTEND_IMAGE_NAME .
           docker push $NETFLIX_FRONTEND_IMAGE_NAME
 
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Checkout infrastructure repo
         uses: actions/checkout@v3
         with:
@@ -45,8 +50,8 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config --global user.email "yaelwilamo@gmail.com"
-          git config --global user.name "YaelWilamowski"
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
 
       - name: Commit and Push changes
         run: |
