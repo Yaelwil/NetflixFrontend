@@ -49,4 +49,4 @@ jobs:
           cd NetflixInfra
           git add *
           git commit -m "Changes to the repo ${{ github.run_number }}"
-          git push
+          git push origin main
