@@ -36,7 +36,6 @@ jobs:
           NETFLIX_FRONTEND_IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/netflixfrontend:0.0.${{ github.run_number }}
           cd ./NetflixInfra/k8s/NetflixFrontend
           sed -i "s/image: .*/image: ${NETFLIX_FRONTEND_IMAGE_NAME}/" frontend.yaml
-          
 
       - name: Commit and Push changes
         run: |
