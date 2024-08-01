@@ -19,34 +19,25 @@ jobs:
       - name: Build and push docker images
         run: |
           # Login to DockerHub         
-          echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
 
           # Build and push Docker image
           NETFLIX_FRONTEND_IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/netflixfrontend:0.0.${{ github.run_number }}
           docker build -t $NETFLIX_FRONTEND_IMAGE_NAME .
           docker push $NETFLIX_FRONTEND_IMAGE_NAME
 
-      - name: Setup SSH key
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
       - name: Checkout infrastructure repo
         uses: actions/checkout@v3
         with:
           repository: Yaelwil/NetflixInfra
+          token: ${{ secrets.REPO_TOKEN }}
           path: NetflixInfra
-          ssh-strict: true
-          persist-credentials: true
-          clean: true
-          fetch-depth: 1
-          submodules: false
 
       - name: Update YAML manifests
         run: |
           NETFLIX_FRONTEND_IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/netflixfrontend:0.0.${{ github.run_number }}
           cd NetflixInfra/k8s/NetflixFrontend
-          sed -i "s|image: .*|image: ${NETFLIX_FRONTEND_IMAGE_NAME}|" deployment.yaml
+          sed -i "s|image: .*|image: ${NETFLIX_FRONTEND_IMAGE_NAME}|" frontend.yaml
 
       - name: Configure Git
         run: |
