@@ -1,26 +1,49 @@
+// pipelines/build-prod.Jenkinsfile
 pipeline {
-    agent any
 
-    parameters {
-        string(name: 'IMAGE_FULL_NAME', defaultValue: '', description: 'Full name of the Docker image built')
+    agent {
+    label 'general'
     }
 
-    stages {
-        stage('Build') {
+    triggers {
+        githubPush()   // trigger the pipeline upon push event in github
+    }
+
+    options {
+        timeout(time: 10, unit: 'MINUTES')  // discard the build after 10 minutes of running
+        timestamps()  // display timestamp in console output
+    }
+
+    environment {
+        // GIT_COMMIT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+        // TIMESTAMP = new Date().format("yyyyMMdd-HHmmss")
+
+        IMAGE_TAG = "v1.0.$BUILD_NUMBER"
+        IMAGE_BASE_NAME = "netflix_frontend"
+
+        DOCKER_CREDS = credentials('dockerhub')
+        DOCKER_USERNAME = "${DOCKER_CREDS_USR}"  // The _USR suffix added to access the username value
+        DOCKER_PASS = "${DOCKER_CREDS_PSW}"      // The _PSW suffix added to access the password value
+    }
+
+        stages {
+        stage('Docker setup') {
             steps {
-                // Build Docker image steps
-                sh "docker build -t $IMAGE_FULL_NAME ."
-                // Push Docker image steps
-                sh "docker push $IMAGE_FULL_NAME"
+                sh '''
+                  docker login -u $DOCKER_USERNAME -p $DOCKER_PASS
+                '''
             }
         }
 
-        stage('Trigger Deploy') {
+        stage('Build & Push') {
             steps {
-                build job: 'NetflixFrontendDeploy', wait: false, parameters: [
-                    string(name: 'SERVICE_NAME', value: 'NetflixFrontend'),
-                    string(name: 'IMAGE_FULL_NAME_PARAM', value: "${params.IMAGE_FULL_NAME}")
-                ]
+                script {
+                    def imageFullName = "${DOCKER_USERNAME}/${IMAGE_BASE_NAME}:${IMAGE_TAG}"
+                    sh """
+                      docker build -t ${imageFullName} .
+                      docker push ${imageFullName}
+                    """
+                }
             }
         }
     }
