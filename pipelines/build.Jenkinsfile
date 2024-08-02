@@ -1,6 +1,6 @@
 agent {
    label 'general'
-}
+
 
     triggers {
         githubPush()
