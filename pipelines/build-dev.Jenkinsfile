@@ -1,12 +1,10 @@
-// pipelines/build-prod.Jenkinsfile
 pipeline {
-
     agent {
-    label 'general'
+        label 'general'
     }
 
     triggers {
-        githubPush()   // trigger the pipeline upon push event in github
+        githubPush()
     }
 
     options {
@@ -15,18 +13,15 @@ pipeline {
     }
 
     environment {
-        // GIT_COMMIT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-        // TIMESTAMP = new Date().format("yyyyMMdd-HHmmss")
-
         IMAGE_TAG = "v1.0.$BUILD_NUMBER"
-        IMAGE_BASE_NAME = "netflix_frontend"
+        IMAGE_BASE_NAME = "netflix-frontend-dev"
 
         DOCKER_CREDS = credentials('dockerhub')
         DOCKER_USERNAME = "${DOCKER_CREDS_USR}"  // The _USR suffix added to access the username value
         DOCKER_PASS = "${DOCKER_CREDS_PSW}"      // The _PSW suffix added to access the password value
     }
 
-        stages {
+    stages {
         stage('Docker setup') {
             steps {
                 sh '''
@@ -35,15 +30,21 @@ pipeline {
             }
         }
 
-        stage('Build & Push') {
+        stage('Build app container') {
             steps {
-                script {
-                    def imageFullName = "${DOCKER_USERNAME}/${IMAGE_BASE_NAME}:${IMAGE_TAG}"
-                    sh """
-                      docker build -t ${imageFullName} .
-                      docker push ${imageFullName}
-                    """
-                }
+                sh '''
+                    IMAGE_FULL_NAME=$DOCKER_USERNAME/$IMAGE_BASE_NAME:$IMAGE_TAG
+                    docker build -t $IMAGE_FULL_NAME .
+                    docker push $IMAGE_FULL_NAME
+                '''
+            }
+        }
+        stage('Trigger Deploy') {
+            steps {
+                build job: 'NetflixDeployDev', wait: false, parameters: [
+                    string(name: 'SERVICE_NAME', value: "NetflixFrontend"),
+                    string(name: 'IMAGE_FULL_NAME_PARAM', value: "$DOCKER_USERNAME/$IMAGE_BASE_NAME:$IMAGE_TAG")
+                ]
             }
         }
     }
